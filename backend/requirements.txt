@@ -1,0 +1,16 @@
+# fastapi
+fastapi==0.100.0
+pydantic==2.0.3
+uvicorn==0.23.0
+
+# db
+sqlalchemy==2.0.13
+mysql-connector-python==8.0.33
+
+# migrations
+alembic==1.11.1
+
+# global
+python-multipart==0.0.6
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
