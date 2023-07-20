@@ -27,7 +27,7 @@ class UserTbl(Base):
     email: Mapped[str] = mapped_column(String(255))
 
 
-ExpenseGroupMembers = Table(
+ExpenseGroupMembersTbl = Table(
     "expense_group_members",
     Base.metadata,
     Column("group_id", Integer, ForeignKey("expense_group.id")),
@@ -52,6 +52,4 @@ class ExpenseGroupTbl(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(255))
-
-    expenses: Mapped[List["ExpenseTbl"]] = relationship()
-    users: Mapped[List["UserTbl"]] = relationship(secondary=ExpenseGroupMembers)
+    author_id: Mapped[int] = mapped_column(ForeignKey("user.id"))

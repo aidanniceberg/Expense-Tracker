@@ -1,0 +1,91 @@
+from typing import List
+
+from components.db import get_engine
+from components.models.expense_group import ExpenseGroup
+from components.models.orm_models import (ExpenseGroupMembersTbl,
+                                          ExpenseGroupTbl)
+from components.utils.exceptions import DoesNotExistError
+from sqlalchemy import insert, select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
+_engine = get_engine()
+
+def get_groups(user_id: int) -> List[ExpenseGroup]:
+    """
+    Gets all expense groups for a given user
+
+    :param user_id: id of user to get the groups for
+    :except Exception if an error occurs communicating with the db
+    """
+    try:
+        with Session(_engine) as session:
+            groups = (
+                session
+                .query(ExpenseGroupTbl)
+                .join(ExpenseGroupMembersTbl)
+                .filter(ExpenseGroupMembersTbl.c.user_id == user_id)
+            )
+            return [
+                ExpenseGroup(
+                    id=group.id,
+                    name=group.name,
+                    author_id=group.author_id
+                )
+                for group in groups
+            ]
+    except Exception as e:
+        raise Exception(f"An error occurred retrieving a user from the db: {e}")
+
+
+def create_group(author_id: int, name: str, members: List[int] = []) -> int:
+    """
+    Creates an expense group
+
+    :param author_id: id of user creating the group
+    :param name: name of the group
+    :param members: ids of users in the group
+    :return group id
+    :except DoesNotExistError if the a user reference does not exist
+    :except Exception if an error occurs communicating with the db
+    """
+    try:
+        with Session(_engine) as session:
+            group = ExpenseGroupTbl(
+                name=name,
+                author_id=author_id
+            )
+            session.add(group)
+            session.flush()
+            session.refresh(group)
+            for id in [author_id, *members]:
+                stmt = insert(ExpenseGroupMembersTbl).values(
+                    group_id=group.id,
+                    user_id=id,
+                )
+                session.execute(stmt)
+            session.commit()
+            return group.id
+    except IntegrityError:
+        raise DoesNotExistError(f"One or more expense group members do not exist")
+    except Exception as e:
+        raise Exception(f"An error occurred retrieving a user from the db: {e}")
+
+
+def user_is_member(user_id: int, group_id: int) -> bool:
+    """
+    Determines if a user is a member of a given group
+
+    :param user_id: id of user
+    :param group_id: id of group
+    :return true if the user is a member of the group
+    """
+    try:
+        with Session(_engine) as session:
+            stmt = select(ExpenseGroupMembersTbl).where(
+                (ExpenseGroupMembersTbl.c.user_id == user_id) &
+                (ExpenseGroupMembersTbl.c.group_id == group_id)
+            )
+            return session.execute(stmt).rowcount > 0
+    except Exception as e:
+        raise Exception(f"An error occurred retrieving a user from the db: {e}")
