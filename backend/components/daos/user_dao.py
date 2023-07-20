@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import List, Optional
 
 from components.db import get_engine
-from components.models.orm_models import UserTbl
+from components.models.orm_models import ExpenseGroupMembersTbl, UserTbl
 from components.models.user import User
 from components.utils.exceptions import UsernameExistsError
 from sqlalchemy import select
@@ -29,6 +29,36 @@ def get_user_by_id(id: int) -> Optional[User]:
                 last_name=user.last_name,
                 email=user.email,
             ) if user else None
+    except Exception as e:
+        raise Exception(f"An error occurred retrieving a user from the db: {e}")
+
+
+def get_group_members(group_id: int) -> List[User]:
+    """
+    Gets all members for a given group. If the user tries to query a group they don't belong to, throw an error
+
+    :param group_id: id of group to get members for
+    :return list of users who are members of the group
+    :except Exception if an error occurs communicating with the db
+    """
+    try:
+        with Session(_engine) as session:
+            users = (
+                session
+                .query(UserTbl)
+                .join(ExpenseGroupMembersTbl)
+                .filter(ExpenseGroupMembersTbl.c.group_id == group_id)
+            )
+            return [
+                User(
+                    id=user.id,
+                    username=user.username,
+                    first_name=user.first_name,
+                    last_name=user.last_name,
+                    email=user.email
+                )
+                for user in users
+            ]
     except Exception as e:
         raise Exception(f"An error occurred retrieving a user from the db: {e}")
 
