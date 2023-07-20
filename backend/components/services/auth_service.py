@@ -56,6 +56,16 @@ def authenticate(username: str, password: str) -> Optional[AuthUser]:
     )
 
 
+def hash_password(password: str) -> str:
+    """
+    Hashes a plaintext password
+
+    :param password: plaintext password to hash
+    :return hashed password
+    """
+    return _pwd_context.hash(password)
+
+
 def get_current_user(token: Annotated[str, Depends(_oauth2_scheme)]) -> User:
     """
     Given a token, gets the currently authenticated user
