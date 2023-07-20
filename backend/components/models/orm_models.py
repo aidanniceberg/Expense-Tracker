@@ -9,8 +9,8 @@ class Base(DeclarativeBase):
     pass
 
 
-class UserAuthTbl(Base):
-    __tablename__ = "user_auth"
+class AuthUserTbl(Base):
+    __tablename__ = "auth_user"
 
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), primary_key=True)
     username: Mapped[str] = mapped_column(String(255))
@@ -21,7 +21,7 @@ class UserTbl(Base):
     __tablename__ = "user"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(String(255))
+    username: Mapped[str] = mapped_column(String(255), unique=True)
     first_name: Mapped[str] = mapped_column(String(255))
     last_name: Mapped[str] = mapped_column(String(255))
     email: Mapped[str] = mapped_column(String(255))
