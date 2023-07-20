@@ -13,7 +13,7 @@ class AuthUserTbl(Base):
     __tablename__ = "auth_user"
 
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), primary_key=True)
-    username: Mapped[str] = mapped_column(String(255))
+    username: Mapped[str] = mapped_column(String(255), unique=True)
     hashed_password: Mapped[str] = mapped_column(String(255))
 
 
