@@ -5,7 +5,7 @@ from components.models.expense_group import ExpenseGroup
 from components.models.orm_models import (ExpenseGroupMembersTbl,
                                           ExpenseGroupTbl)
 from components.utils.exceptions import DoesNotExistError
-from sqlalchemy import insert, select
+from sqlalchemy import and_, insert, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -83,8 +83,10 @@ def user_is_member(user_id: int, group_id: int) -> bool:
     try:
         with Session(_engine) as session:
             stmt = select(ExpenseGroupMembersTbl).where(
-                (ExpenseGroupMembersTbl.c.user_id == user_id) &
-                (ExpenseGroupMembersTbl.c.group_id == group_id)
+                and_(
+                    ExpenseGroupMembersTbl.c.user_id == user_id,
+                    ExpenseGroupMembersTbl.c.group_id == group_id
+                )
             )
             return session.execute(stmt).rowcount > 0
     except Exception as e:

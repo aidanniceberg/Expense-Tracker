@@ -1,16 +1,28 @@
-from typing import Annotated, List
+from datetime import datetime
+from typing import Annotated, List, Optional
 
 from components.models.auth.token import Token
-from components.models.user import User
+from components.models.expense import Expense
 from components.models.expense_group import ExpenseGroup
-from components.services import auth_service, expense_group_service, user_service
-from components.utils.exceptions import UsernameExistsError, DoesNotExistError
+from components.models.user import User
+from components.services import (
+    auth_service,
+    expense_group_service,
+    expense_service,
+    user_service
+)
+from components.utils.exceptions import (
+    DoesNotExistError,
+    UnauthorizedError,
+    UsernameExistsError
+)
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.security import OAuth2PasswordRequestForm
 
 AUTH_TAG = "Authentication"
 USERS_TAG = "Users"
 GROUPS_TAG = "Groups"
+EXPENSES_TAG = "Expenses"
 
 app = FastAPI()
 
@@ -39,9 +51,11 @@ def get_groups(user: Annotated[User, Depends(auth_service.get_current_user)]) ->
 
 
 @app.get("/groups/{id}/members", tags=[GROUPS_TAG])
-def get_groups(id: int, user: Annotated[User, Depends(auth_service.get_current_user)]) -> List[User]:
+def get_group_members(id: int, user: Annotated[User, Depends(auth_service.get_current_user)]) -> List[User]:
     try:
         return expense_group_service.get_group_members(user.id, id)
+    except UnauthorizedError as ue:
+        raise HTTPException(status_code=401, detail=str(ue))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -55,6 +69,50 @@ def create_group(author: Annotated[User, Depends(auth_service.get_current_user)]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@app.get("/groups/{id}/expenses", tags=[GROUPS_TAG])
+def get_expenses(user: Annotated[User, Depends(auth_service.get_current_user)], id: int, created_before: Optional[datetime] = None, created_after: Optional[datetime] = None) -> List[Expense]:
+    try:
+        return expense_service.get_expenses_by_group(group_id=id, user_id=user.id, created_before=created_before, created_after=created_after)
+    except UnauthorizedError as ue:
+        raise HTTPException(status_code=401, detail=str(ue))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/groups/{id}/expenses", tags=[GROUPS_TAG])
+def create_expense(author: Annotated[User, Depends(auth_service.get_current_user)], title: str, price: float, id: int, description: Optional[str] = None) -> int:
+    try:
+        return expense_service.create_expense(author.id, title, price, id, description)
+    except DoesNotExistError as dne:
+        raise HTTPException(status_code=404, detail=str(dne))
+    except UnauthorizedError as ue:
+        raise HTTPException(status_code=401, detail=str(ue))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.patch("/expenses/{id}", tags=[EXPENSES_TAG])
+def update_expense(user: Annotated[User, Depends(auth_service.get_current_user)], id: int, title: Optional[str] = None, price: Optional[float] = None, description: Optional[str] = None) -> bool:
+    try:
+        return expense_service.update_expense(expense_id=id, user_id=user.id, title=title, price=price, description=description)
+    except UnauthorizedError as ue:
+        raise HTTPException(status_code=401, detail=str(ue))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/expenses/{id}", tags=[EXPENSES_TAG])
+def delete_expense(user: Annotated[User, Depends(auth_service.get_current_user)], id: int) -> bool:
+    try:
+        return expense_service.delete_expense(user.id, id)
+    except DoesNotExistError as dne:
+        raise HTTPException(status_code=404, detail=str(dne))
+    except UnauthorizedError as ue:
+        raise HTTPException(status_code=401, detail=str(ue))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 
 @app.post("/token", tags=[AUTH_TAG])
 def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
