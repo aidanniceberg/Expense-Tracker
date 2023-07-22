@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import Column, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -40,10 +40,10 @@ class ExpenseTbl(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(255))
-    description: Mapped[str] = mapped_column(String(255))
+    description: Mapped[Optional[str]] = mapped_column(String(255))
     price: Mapped[float]
     date: Mapped[datetime]
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    author_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
     group_id: Mapped[int] = mapped_column(ForeignKey("expense_group.id"))
 
 
