@@ -89,3 +89,19 @@ def create_user(username: str, first_name: str, last_name: str, email: str) -> i
     except Exception as e:
         raise Exception(f"An error occurred retrieving a user from the db: {e}")
 
+
+def user_exists(user_id: int) -> bool:
+    """
+    Determines if a user exists
+
+    :param user_id: user being checked
+    :return True if the user exist
+    :except Exception if an error occurs communicating with the db
+    """
+    try:
+        with Session(_engine) as session:
+            stmt = select(UserTbl).where(UserTbl.id == user_id)
+            result = session.scalars(stmt).all()
+            return len(result) > 0
+    except Exception as e:
+        raise Exception(f"An error occurred retrieving a user from the db: {e}")

@@ -72,6 +72,27 @@ def create_group(author_id: int, name: str, members: List[int] = []) -> int:
         raise Exception(f"An error occurred retrieving a user from the db: {e}")
 
 
+def add_member(group_id: int, user_id: int) -> bool:
+    """
+    Adds a member to a group
+
+    :param group_id: id of group the member is being added to
+    :param user_id: id of user being added to the group
+    :except Exception if an error occurs communicating with the db
+    """
+    try:
+        with Session(_engine) as session:
+            stmt = insert(ExpenseGroupMembersTbl).values(
+                group_id=group_id,
+                user_id=user_id,
+            )
+            session.execute(stmt)
+            session.commit()
+            return True
+    except Exception as e:
+        raise Exception(f"An error occurred retrieving a user from the db: {e}")
+
+
 def user_is_member(user_id: int, group_id: int) -> bool:
     """
     Determines if a user is a member of a given group

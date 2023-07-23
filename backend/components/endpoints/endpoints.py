@@ -5,17 +5,11 @@ from components.models.auth.token import Token
 from components.models.expense import Expense
 from components.models.expense_group import ExpenseGroup
 from components.models.user import User
-from components.services import (
-    auth_service,
-    expense_group_service,
-    expense_service,
-    user_service
-)
-from components.utils.exceptions import (
-    DoesNotExistError,
-    UnauthorizedError,
-    UsernameExistsError
-)
+from components.services import (auth_service, expense_group_service,
+                                 expense_service, user_service)
+from components.utils.exceptions import (DoesNotExistError, ExistsError,
+                                         UnauthorizedError,
+                                         UsernameExistsError)
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -60,12 +54,24 @@ def get_group_members(id: int, user: Annotated[User, Depends(auth_service.get_cu
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/groups/{id}/members", tags=[GROUPS_TAG])
+def add_group_member(user: Annotated[User, Depends(auth_service.get_current_user)], id: int, user_id: int) -> bool:
+    try:
+        return expense_group_service.add_group_member(user.id, id, user_id)
+    except ExistsError as ae:
+        raise HTTPException(status_code=403, detail=str(ae))
+    except UnauthorizedError as ue:
+        raise HTTPException(status_code=401, detail=str(ue))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/groups", tags=[GROUPS_TAG])
 def create_group(author: Annotated[User, Depends(auth_service.get_current_user)], name: str, members: Annotated[List[int], Query()] = []) -> int:
     try:
         return expense_group_service.create_group(author.id, name, members)
-    except DoesNotExistError:
-        raise HTTPException(status_code=404, detail="Group member not found")
+    except DoesNotExistError as dne:
+        raise HTTPException(status_code=404, detail=str(dne))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
