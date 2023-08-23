@@ -1,16 +1,18 @@
 from datetime import datetime
 from typing import Annotated, List, Optional
 
+from components.constants import ACCESS_TOKEN_KEY
 from components.models.auth.token import Token
 from components.models.expense import Expense
 from components.models.expense_group import ExpenseGroup
 from components.models.user import User
 from components.services import (auth_service, expense_group_service,
                                  expense_service, user_service)
-from components.utils.exceptions import (DoesNotExistError, ExistsError,
-                                         UnauthorizedError,
+from components.utils.exceptions import (CredentialsError, DoesNotExistError,
+                                         ExistsError, UnauthorizedError,
                                          UsernameExistsError)
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, Response
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 
 AUTH_TAG = "Authentication"
@@ -18,7 +20,19 @@ USERS_TAG = "Users"
 GROUPS_TAG = "Groups"
 EXPENSES_TAG = "Expenses"
 
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
+
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def read_root():
@@ -121,9 +135,21 @@ def delete_expense(user: Annotated[User, Depends(auth_service.get_current_user)]
     
 
 @app.post("/token", tags=[AUTH_TAG])
-def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
+def login(response: Response, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     try:
-       return auth_service.login(form_data)
+       token = auth_service.login(form_data)
+       response.set_cookie(
+           key=ACCESS_TOKEN_KEY,
+           value=token.access_token,
+           expires=1800
+        )
+       return token
+    except CredentialsError as ce:
+        raise HTTPException(
+            status_code=401,
+            detail=str(ce),
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
