@@ -21,3 +21,9 @@ class DoesNotExistError(Exception):
     Error when trying to query or reference something that does not exist
     """
     pass
+
+class CredentialsError(Exception):
+    """
+    Error when a user tries to log in with invalid credentials
+    """
+    pass

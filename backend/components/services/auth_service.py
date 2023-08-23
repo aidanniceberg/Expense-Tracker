@@ -1,23 +1,19 @@
 from datetime import datetime, timedelta
 from typing import Annotated, Optional
 
+from components.constants import ACCESS_TOKEN_KEY
 from components.daos import auth_dao, user_dao
 from components.models.auth.auth_user import AuthUser
 from components.models.auth.token import Token
 from components.models.user import User
-from fastapi import Depends, HTTPException, status
+from components.utils.exceptions import CredentialsError
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-SECRET_KEY = "4dbb389159575f3f0f91f178d6696409fe8c273e1f91d12605871deafeded3ef"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-CREDENTIALS_EXCEPTION = HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Could not validate credentials",
-    headers={"WWW-Authenticate": "Bearer"},
-)
 
 _oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -32,7 +28,7 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     """
     user = authenticate(form_data.username, form_data.password)
     if not user:
-        raise CREDENTIALS_EXCEPTION
+        raise CredentialsError("Could not validate credentials")
     access_token = create_access_token(user.username)
     return Token(
         access_token=access_token,
@@ -76,21 +72,26 @@ def get_current_user(token: Annotated[str, Depends(_oauth2_scheme)]) -> User:
     :except 500 exception if the user is properly authenticated but not found in the db
     """
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub")
-        if username is None:
-            raise CREDENTIALS_EXCEPTION
+        payload = jwt.decode(token, ACCESS_TOKEN_KEY, algorithms=[ALGORITHM])
     except JWTError:
-        raise CREDENTIALS_EXCEPTION
+        raise CredentialsError("Could not validate credentials")
+    
+    username = payload.get("sub")
+    if username is None:
+        raise CredentialsError("Could not validate credentials")
+    
+    exp_timestamp = payload.get("exp")
+    if exp_timestamp is None or datetime.fromtimestamp(exp_timestamp) < datetime.now():
+        raise CredentialsError("Acess token is expired")
+
     auth_user = _get_auth_user_by_username(username)
     if auth_user is None:
-        raise CREDENTIALS_EXCEPTION
+        raise CredentialsError("Could not validate credentials")
+    
     user = _get_user_by_id(auth_user.user_id)
     if user is None:
-        raise HTTPException(
-            status_code=500,
-            detail="User properly authenticated but not found in db"
-        )
+        raise Exception("User properly authenticated but not found in db")
+    
     return user
 
 
@@ -106,7 +107,7 @@ def create_access_token(username: str, ttl: timedelta = timedelta(minutes=ACCESS
         "exp": datetime.utcnow() + ttl,
         "sub": username,
     }
-    return jwt.encode(token, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(token, ACCESS_TOKEN_KEY, algorithm=ALGORITHM)
 
 
 def _get_auth_user_by_username(username: str) -> Optional[AuthUser]:
