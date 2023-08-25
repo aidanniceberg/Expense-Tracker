@@ -1,18 +1,10 @@
-import { useEffect, useState } from 'react';
-import { getCurrentUser } from '../services';
-import { User } from '../types';
+import { useContext } from 'react';
+import { AuthContext } from '../AuthContext';
 
 function HomePage() {
-    const [user, setUser] = useState<User | null>(null);
+    const authContext = useContext(AuthContext);
 
-    useEffect(() => {
-        (async () => {
-            const currentUser = await getCurrentUser();
-            setUser(currentUser);
-        })();
-    }, []);
-
-    return <h1>Hi, {user?.username}</h1>
+    return <h1>Hi, {authContext.user?.username}</h1>
 }
 
 export default HomePage;

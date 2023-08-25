@@ -1,15 +1,25 @@
 import './AccountEntry.css';
-import { FormEvent } from 'react';
-import { login } from '../services';
+import { FormEvent, useContext, useState } from 'react';
+import { AuthContext } from '../AuthContext';
 
 function LoginPage() {
+    const [failedLogin, setFailedLogin] = useState(false);
+    const authContext = useContext(AuthContext);
+    const invalidInput = 'input-invalid';
+    const invalidLabel = 'label-invalid';
+
     const authenticate = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const data: FormData = new FormData(event.currentTarget);
-        const status: number = await login(data);
+        const username = data.get('username') ?? '';
+        const password = data.get('password') ?? '';
 
-        if (status === 200) {
+        try {
+            await authContext.login(`${username}`, `${password}`);
             window.location.href = 'http://localhost:3000/home';
+        } catch (e) {
+            setFailedLogin(true);
+            setTimeout(() => { setFailedLogin(false) }, 500);
         }
     }
 
@@ -17,10 +27,10 @@ function LoginPage() {
         <div className='auth-wrapper'>
             <h1 className='auth-title'>Login</h1>
             <form onSubmit={authenticate} className='input-wrapper'>
-                <label className='auth-label'>Username</label>
-                <input className='auth-text-input' type='text' name='username' />
-                <label className='auth-label'>Password</label>
-                <input className='auth-text-input' type='password' name='password' />
+                <label className={'auth-label ' + (failedLogin ? invalidLabel : '')}>Username</label>
+                <input className={'auth-text-input ' + (failedLogin ? invalidInput : '')} type='text' name='username' />
+                <label className={'auth-label ' + (failedLogin ? invalidLabel : '')}>Password</label>
+                <input className={'auth-text-input ' + (failedLogin ? invalidInput : '')} type='password' name='password' />
                 <input type='submit' className='submit' value='Log In'></input>
             </form>
         </div>
