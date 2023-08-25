@@ -5,3 +5,8 @@ export type User = {
     last_name: string;
     email: string;
 }
+
+export type AuthToken = {
+    access_token: string;
+    token_type: string;
+}
