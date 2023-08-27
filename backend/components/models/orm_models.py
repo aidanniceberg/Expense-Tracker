@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
-from sqlalchemy import Column, ForeignKey, Integer, String, Table
+from sqlalchemy import Column, ForeignKey, Integer, String, Table, DateTime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -53,3 +53,6 @@ class ExpenseGroupTbl(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(255))
     author_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    created_date: Mapped[datetime] = mapped_column(DateTime)
+
+    author: Mapped["UserTbl"] = relationship()

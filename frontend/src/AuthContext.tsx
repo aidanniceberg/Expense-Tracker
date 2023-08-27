@@ -11,6 +11,7 @@ type AuthContextType = {
     user?: User;
     token: string;
     isAuthenticated: boolean;
+    isLoading: boolean;
     login: (username: string, password: string) => void;
 }
 
@@ -20,8 +21,10 @@ function AuthContextProvider({ children }: AuthContextProps) {
     const [user, setUser] = useState<User>();
     const [token, setToken] = useState('');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        setIsLoading(true);
         const currentToken = getToken();
         if (currentToken !== null) {
             setToken(currentToken);
@@ -31,9 +34,11 @@ function AuthContextProvider({ children }: AuthContextProps) {
                     setIsAuthenticated(true);
                 });
         }
+        setIsLoading(false);
     }, []);
 
     const login = async (username: string, password: string) => {
+        setIsLoading(true);
         await generateToken(username, password)
             .then((currentToken) => {
                 setToken(currentToken.access_token)
@@ -42,6 +47,9 @@ function AuthContextProvider({ children }: AuthContextProps) {
                         setUser(user)
                     })
                 setIsAuthenticated(true);
+            })
+            .finally(() => {
+                setIsLoading(false);
             });
     }
 
@@ -51,6 +59,7 @@ function AuthContextProvider({ children }: AuthContextProps) {
                 user,
                 token,
                 isAuthenticated,
+                isLoading,
                 login
             }}>
             {children}
