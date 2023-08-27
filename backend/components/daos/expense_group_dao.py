@@ -1,9 +1,11 @@
+from datetime import datetime
 from typing import List
 
 from components.db import get_engine
 from components.models.expense_group import ExpenseGroup
 from components.models.orm_models import (ExpenseGroupMembersTbl,
-                                          ExpenseGroupTbl)
+                                          ExpenseGroupTbl, UserTbl)
+from components.models.user import User
 from components.utils.exceptions import DoesNotExistError
 from sqlalchemy import and_, insert, select
 from sqlalchemy.exc import IntegrityError
@@ -30,7 +32,14 @@ def get_groups(user_id: int) -> List[ExpenseGroup]:
                 ExpenseGroup(
                     id=group.id,
                     name=group.name,
-                    author_id=group.author_id
+                    created_date=group.created_date,
+                    author=User(
+                        id=group.author.id,
+                        username=group.author.username,
+                        first_name=group.author.first_name,
+                        last_name=group.author.last_name,
+                        email=group.author.email,
+                    )
                 )
                 for group in groups
             ]
@@ -53,7 +62,8 @@ def create_group(author_id: int, name: str, members: List[int] = []) -> int:
         with Session(_engine) as session:
             group = ExpenseGroupTbl(
                 name=name,
-                author_id=author_id
+                author_id=author_id,
+                created_date=datetime.utcnow(),
             )
             session.add(group)
             session.flush()

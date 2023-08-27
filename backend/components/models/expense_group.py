@@ -1,4 +1,7 @@
+from datetime import datetime
 from pydantic import BaseModel
+
+from components.models.user import User
 
 class ExpenseGroup(BaseModel):
     """
@@ -6,4 +9,5 @@ class ExpenseGroup(BaseModel):
     """
     id: int
     name: str
-    author_id: int
+    author: User
+    created_date: datetime

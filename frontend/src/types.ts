@@ -10,3 +10,10 @@ export type AuthToken = {
     access_token: string;
     token_type: string;
 }
+
+export type Group = {
+    id: number;
+    name: string;
+    author: User;
+    created_date: string;
+}

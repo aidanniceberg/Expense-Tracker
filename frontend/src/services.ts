@@ -1,5 +1,5 @@
 import { API_URL } from "./constants";
-import { AuthToken, User } from './types';
+import { AuthToken, Group, User } from './types';
 
 export const login = (username: string, password: string): Promise<AuthToken> => {
     return fetch(`${API_URL}/token`, {
@@ -21,6 +21,24 @@ export const login = (username: string, password: string): Promise<AuthToken> =>
 
 export const getCurrentUser = (token: string): Promise<User> => {
     return fetch(`${API_URL}/users/me`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        }
+    })
+        .then((response) => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw Error(`Encountered an HTTP error: ${response.status}: ${response.json()}`)
+            }
+        });
+}
+
+export const getGroups = (token: string): Promise<Array<Group>> => {
+    return fetch(`${API_URL}/groups`, {
         method: 'GET',
         credentials: 'include',
         headers: {
