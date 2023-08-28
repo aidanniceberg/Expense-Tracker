@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import LoginPage from './LoginPage';
 import HomePage from './HomePage';
 import AuthContextProvider from '../AuthContext';
+import CreateGroupPage from './CreateGroupPage';
 
 function Router() {
     return (
@@ -11,6 +12,7 @@ function Router() {
                     <Route path="/" element={<Navigate to='/login' />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/home" element={<HomePage />} />
+                    <Route path="/groups/create" element={<CreateGroupPage />} />
                     <Route path="*" element={<h1>Page Not Found</h1>} />
                 </Routes>
             </BrowserRouter>

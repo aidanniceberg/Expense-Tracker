@@ -83,6 +83,7 @@ a {
   text-align: left;
   border-collapse: collapse;
   margin-bottom: 15px;
+  table-layout: fixed;
 }
 
 .content-table tr {
@@ -122,4 +123,42 @@ a {
   background: #2d3a3a;
   color: #fcfffc;
   transition: 0.1s;
+}
+
+.form-label {
+  display: block;
+  font-weight: 400;
+  color: #2d3a3a;
+  margin: 5px 0;
+}
+
+.form-input-text {
+  outline: none;
+  padding: 8px 10px;
+  border-radius: 5px;
+  border: 1px solid #2d3a3a;
+  width: 320px;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
+
+.form-input-wrapper {
+  width: 320px;
+}
+
+.btn-create {
+  width: 320px;
+  margin: 25px 0;
+  padding: 8px 10px;
+  background: #2d3a3a;
+  color: #fcfffc;
+}
+
+.btn-create:hover {
+  background: #fcfffc;
+  color: #2d3a3a;
+}
+
+.msg-error {
+  color: #fe5f55;
 }

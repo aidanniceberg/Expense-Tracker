@@ -38,6 +38,15 @@ app.add_middleware(
 def read_root():
     return {"Hello": "World"}
 
+
+@app.get("/users", tags=[USERS_TAG])
+def get_users(user: Annotated[User, Depends(auth_service.get_current_user)]) -> List[User]:
+    try:
+        return user_service.get_users()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/users", tags=[USERS_TAG])
 def create_user(username: str, password: str, first_name: str, last_name: str, email: str) -> bool:
     try:

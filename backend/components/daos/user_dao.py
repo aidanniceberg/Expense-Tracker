@@ -10,6 +10,28 @@ from sqlalchemy.orm import Session
 
 _engine = get_engine()
 
+def get_users() -> List[User]:
+    """
+    Gets all users
+
+    :return list of users
+    """
+    try:
+        with Session(_engine) as session:
+            stmt = select(UserTbl)
+            result = session.scalars(stmt).all()
+            return [
+                User(
+                    id=user.id,
+                    username=user.username,
+                    first_name=user.first_name,
+                    last_name=user.last_name,
+                    email=user.email,
+                ) for user in result
+            ]
+    except Exception as e:
+        raise Exception(f"An error occurred retrieving users from the db: {e}")
+
 def get_user_by_id(id: int) -> Optional[User]:
     """
     Gets a user with a given id

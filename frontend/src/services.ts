@@ -37,9 +37,47 @@ export const getCurrentUser = (token: string): Promise<User> => {
         });
 }
 
+export const getUsers = (token: string): Promise<Array<User>> => {
+    return fetch(`${API_URL}/users`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        }
+    })
+        .then((response) => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw Error(`Encountered an HTTP error: ${response.status}: ${response.json()}`)
+            }
+        });
+}
+
 export const getGroups = (token: string): Promise<Array<Group>> => {
     return fetch(`${API_URL}/groups`, {
         method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        }
+    })
+        .then((response) => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw Error(`Encountered an HTTP error: ${response.status}: ${response.json()}`)
+            }
+        });
+}
+
+export const createGroup = (token: string, name: string, members: Array<number>) => {
+    const memberParams = members.map((member) => `members=${member}`).join('&');
+    const urlParams = `name=${name}&${memberParams}`;
+    return fetch(`${API_URL}/groups?${urlParams}`, {
+        method: 'POST',
         credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
