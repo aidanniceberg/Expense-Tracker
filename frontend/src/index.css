@@ -162,3 +162,29 @@ a {
 .msg-error {
   color: #fe5f55;
 }
+
+.metrics-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content:space-evenly;
+  flex-direction: row;
+}
+
+.metrics-container {
+  max-width: 320px;
+  text-align: center;
+  margin: 25px 50px;
+}
+
+.metrics-container-title {
+  padding: 10px;
+  margin: 10px auto;
+  border-bottom: 1px solid #2d3a3a;
+  font-weight: 400;
+  text-align: center;
+  display: inline-block;
+}
+
+.metrics-container-content {
+  font-weight: 600;
+}

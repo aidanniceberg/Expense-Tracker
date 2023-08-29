@@ -67,6 +67,14 @@ def get_groups(user: Annotated[User, Depends(auth_service.get_current_user)]) ->
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/groups/{id}", tags=[GROUPS_TAG])
+def get_group(user: Annotated[User, Depends(auth_service.get_current_user)], id: int) -> Optional[ExpenseGroup]:
+    try:
+        return expense_group_service.get_group(user.id, id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/groups/{id}/members", tags=[GROUPS_TAG])
 def get_group_members(id: int, user: Annotated[User, Depends(auth_service.get_current_user)]) -> List[User]:
     try:
