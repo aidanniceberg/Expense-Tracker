@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from components.db import get_engine
 from components.models.expense_group import ExpenseGroup
@@ -43,6 +43,38 @@ def get_groups(user_id: int) -> List[ExpenseGroup]:
                 )
                 for group in groups
             ]
+    except Exception as e:
+        raise Exception(f"An error occurred retrieving a user from the db: {e}")
+
+
+def get_group(group_id: int) -> Optional[ExpenseGroup]:
+    """
+    Gets an expense group by id
+
+    :param group_id: id of group
+    :return group if it exists else none
+    :except Exception if an error occurs communicating with the db
+    """
+    try:
+        with Session(_engine) as session:
+            group = (
+                session
+                .query(ExpenseGroupTbl)
+                .filter(ExpenseGroupTbl.id == group_id)
+                .first()
+            )
+            return ExpenseGroup(
+                id=group.id,
+                name=group.name,
+                created_date=group.created_date,
+                author=User(
+                    id=group.author.id,
+                    username=group.author.username,
+                    first_name=group.author.first_name,
+                    last_name=group.author.last_name,
+                    email=group.author.email,
+                )
+            ) if group is not None else None
     except Exception as e:
         raise Exception(f"An error occurred retrieving a user from the db: {e}")
 

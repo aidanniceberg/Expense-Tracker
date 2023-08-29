@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from components.daos import expense_group_dao, user_dao
 from components.models.expense_group import ExpenseGroup
@@ -14,6 +14,20 @@ def get_groups(user_id: int) -> List[ExpenseGroup]:
     :return list of expense groups
     """
     return expense_group_dao.get_groups(user_id)
+
+
+def get_group(user_id: int, group_id: int) -> Optional[ExpenseGroup]:
+    """
+    Gets an expense group for a given user
+
+    :param user_id: id of user to get the groups for
+    :param group_id: id of group to get
+    :return expense group if it exists
+    :except UnauthorizedError if user does not belong to the requested group
+    """
+    if not expense_group_dao.user_is_member(user_id, group_id):
+        raise UnauthorizedError("User does not belong to the requested group")
+    return expense_group_dao.get_group(group_id)
 
 
 def get_group_members(user_id: int, group_id: int) -> List[User]:
